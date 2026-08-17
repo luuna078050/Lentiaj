@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "Lenchay shared recipe library",
+  "recipes": [
+    {"id":"classic-omelette","name":"Омлет с овощами","time":"15 мин","icon":"🍳","ingredients":["яйца","помидоры","сыр"],"tags":["завтрак","быстро"]},
+    {"id":"chicken-cheese","name":"Курица с сыром","time":"30 мин","icon":"🍗","ingredients":["курица","сыр"],"tags":["ужин"]},
+    {"id":"casserole","name":"Запеканка","time":"35 мин","icon":"🥘","ingredients":["яйца","сыр"],"tags":["домашнее"]},
+    {"id":"mushroom-pasta","name":"Паста с курицей и грибами","time":"25 мин","icon":"🍝","ingredients":["курица","сыр","шампиньоны","сливки"],"tags":["ужин"]},
+    {"id":"potato-chicken","name":"Картофель с курицей","time":"40 мин","icon":"🥔","ingredients":["курица","картофель","лук"],"tags":["сытно"]},
+    {"id":"classic-mayo","name":"Домашний майонез","time":"10 мин","icon":"🥣","ingredients":["яйца","масло","горчица","лимон"],"tags":["классика","соус"]}
+  ]
+}
