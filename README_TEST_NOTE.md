@@ -1,0 +1,1 @@
+Current implementation is a browser PWA prototype.
