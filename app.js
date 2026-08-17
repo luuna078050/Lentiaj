@@ -1,30 +1,31 @@
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 const state={inventory:[{name:'Яйца',qty:'6 шт.',icon:'🥚'},{name:'Помидоры',qty:'3 шт.',icon:'🍅'},{name:'Сыр',qty:'200 г',icon:'🧀'},{name:'Курица',qty:'500 г',icon:'🍗'},{name:'Сливки',qty:'200 мл',icon:'🥛'}],shopping:[{name:'Шампиньоны',qty:'300 г',icon:'🍄'},{name:'Картофель',qty:'1 кг',icon:'🥔'},{name:'Лук',qty:'2 шт.',icon:'🧅'}]};
-const recipes=[
-{name:'Омлет с овощами',time:'15 мин',ready:true,need:[],icon:'🍳'},
-{name:'Курица с сыром',time:'30 мин',ready:true,need:[],icon:'🍗'},
-{name:'Запеканка',time:'35 мин',ready:true,need:[],icon:'🥘'},
-{name:'Паста с курицей и грибами',time:'25 мин',ready:false,need:['Шампиньоны','Сливки'],icon:'🍝'},
-{name:'Картофель с курицей',time:'40 мин',ready:false,need:['Картофель','Лук'],icon:'🥔'}];
-const $=s=>document.querySelector(s);const $$=s=>document.querySelectorAll(s);
-function renderRecipes(){
- $('#readyRecipes').innerHTML=recipes.filter(r=>r.ready).map(card).join('');
- $('#buyRecipes').innerHTML=recipes.filter(r=>!r.ready).map(card).join('');
- $('#readyCount').textContent=recipes.filter(r=>r.ready).length;
- $$('.recipe .cook').forEach(b=>b.onclick=()=>toast('Отлично. Открываем рецепт: '+b.dataset.name));
-}
-function card(r){return `<article class="recipe"><div class="recipe-top"><div><h3>${r.icon} ${r.name}</h3><p>${r.ready?'Всё необходимое уже есть дома.':'Не хватает: '+r.need.join(', ')+'.'}</p></div></div><div class="recipe-actions"><small>⏱ ${r.time}</small>${r.ready?`<button class="outline cook" data-name="${r.name}">Приготовить</button>`:`<span class="buy-label">Требуется докупить</span>`}</div></article>`}
-function renderInventory(){ $('#inventoryList').innerHTML=state.inventory.map((x,i)=>`<div class="inventory-row"><span class="food-icon">${x.icon}</span><div class="row-main"><strong>${x.name}</strong><small>${x.qty}</small></div><button class="remove" data-i="${i}">×</button></div>`).join(''); $$('.remove').forEach(b=>b.onclick=()=>{state.inventory.splice(+b.dataset.i,1);renderInventory();toast('Продукт удалён')}); }
-function renderShopping(){ $('#shoppingList').innerHTML=state.shopping.map((x,i)=>`<label class="shopping-row"><input type="checkbox" data-i="${i}"><span class="food-icon">${x.icon}</span><div class="row-main"><strong>${x.name}</strong><small>${x.qty}</small></div></label>`).join('');$('#shoppingCount').textContent=state.shopping.length;}
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2200)}
+let recipes=[{name:'Омлет с овощами',time:'15 мин',ready:true,need:[],icon:'🍳'},{name:'Курица с сыром',time:'30 мин',ready:true,need:[],icon:'🍗'},{name:'Запеканка',time:'35 мин',ready:true,need:[],icon:'🥘'},{name:'Паста с курицей и грибами',time:'25 мин',ready:false,need:['Шампиньоны','Сливки'],icon:'🍝'},{name:'Картофель с курицей',time:'40 мин',ready:false,need:['Картофель','Лук'],icon:'🥔'},{name:'Домашний майонез',time:'10 мин',ready:false,need:['Масло','Горчица','Лимон'],icon:'🥣'}];
+const normalize=s=>String(s).toLowerCase().replace(/ё/g,'е');
+const have=name=>state.inventory.some(x=>normalize(x.name).includes(normalize(name))||normalize(name).includes(normalize(x.name)));
+function recalc(){recipes=recipes.map(r=>({...r,ready:r.need.length===0||r.need.every(have)}));}
+function card(r){return `<article class="recipe"><div class="recipe-top"><div><h3>${r.icon} ${r.name}</h3><p>${r.ready?'Всё необходимое уже есть дома.':'Не хватает: '+r.need.filter(x=>!have(x)).join(', ')+'.'}</p></div></div><div class="recipe-actions"><small>⏱ ${r.time}</small>${r.ready?`<button class="outline cook" data-name="${r.name}">Открыть рецепт</button>`:`<span class="buy-label">Требуется докупить</span>`}</div></article>`}
+function renderRecipes(){recalc();$('#readyRecipes').innerHTML=recipes.filter(r=>r.ready).map(card).join('');$('#buyRecipes').innerHTML=recipes.filter(r=>!r.ready).map(card).join('');$('#readyCount').textContent=recipes.filter(r=>r.ready).length;$('#allRecipes').innerHTML=recipes.map(card).join('');$('#recipeCount').textContent=recipes.length;$$('.cook').forEach(b=>b.onclick=()=>openRecipe(b.dataset.name));}
+function openRecipe(name){const r=recipes.find(x=>x.name===name);modal(`<h2>${r.icon} ${r.name}</h2><p><b>Время:</b> ${r.time}</p><div class="hint">Тестовый рецепт подключён. На следующем этапе добавим полноценные шаги, порции и варианты замены ингредиентов.</div><button class="primary full" id="recipeDone">Понятно</button>`)}
+function renderInventory(){$('#inventoryList').innerHTML=state.inventory.map((x,i)=>`<div class="inventory-row"><span class="food-icon">${x.icon}</span><div class="row-main"><strong>${x.name}</strong><small>${x.qty}</small></div><button class="remove" data-i="${i}">×</button></div>`).join('');$$('.remove').forEach(b=>b.onclick=()=>{state.inventory.splice(+b.dataset.i,1);renderInventory();renderRecipes();toast('Продукт удалён')});}
+function renderShopping(){$('#shoppingList').innerHTML=state.shopping.map((x,i)=>`<label class="shopping-row"><input type="checkbox" data-i="${i}"><span class="food-icon">${x.icon}</span><div class="row-main"><strong>${x.name}</strong><small>${x.qty}</small></div></label>`).join('');$('#shoppingCount').textContent=state.shopping.length;}
+function addProduct(name,icon='🍎',qty='1 шт.'){state.inventory.push({name,icon,qty});renderInventory();renderRecipes();}
+function simulateScan(){addProduct('Авокадо','🥑');toast('Нашёл продукт: авокадо');showScreen('inventory');}
 function modal(html){$('#modalContent').innerHTML=html;$('#modal').classList.remove('hidden')}
-$('#closeModal').onclick=()=>$('#modal').classList.add('hidden');$('#modal').onclick=e=>{if(e.target.id==='modal')e.currentTarget.classList.add('hidden')};
-$$('.tab').forEach(t=>t.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');$$('.screen').forEach(x=>x.classList.remove('active'));$('#'+t.dataset.screen).classList.add('active')});
-$('#scanBtn').onclick=()=>modal(`<h2>Сканирование продуктов</h2><p>Камера в этой тестовой версии имитируется. Реальное компьютерное зрение подключим следующим этапом.</p><button class="primary full" id="simulateScan">Запустить тестовое распознавание</button>`);
-$('#modalContent').onclick=e=>{if(e.target.id==='simulateScan'){state.inventory.push({name:'Авокадо',qty:'1 шт.',icon:'🥑'});renderInventory();$('#modal').classList.add('hidden');toast('Нашёл продукт: авокадо');}};
-$('#addProduct').onclick=()=>modal(`<h2>Добавить продукт</h2><button class="choice" data-add="🍎 Яблоки">🍎 Яблоки</button><button class="choice" data-add="🥕 Морковь">🥕 Морковь</button><button class="choice" data-add="🍞 Хлеб">🍞 Хлеб</button>`);
-$('#modalContent').addEventListener('click',e=>{const b=e.target.closest('[data-add]');if(!b)return;const [icon,name]=b.dataset.add.split(' ');state.inventory.push({name,qty:'1 шт.',icon});renderInventory();$('#modal').classList.add('hidden');toast('Добавлено: '+name)});
+function closeModal(){$('#modal').classList.add('hidden')}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2200)}
+function showScreen(id){$$('.tab').forEach(x=>x.classList.toggle('active',x.dataset.screen===id));$$('.screen').forEach(x=>x.classList.toggle('active',x.id===id));}
+function startLazy(){const greeting='Привет. А ну-ка, покажи закрома.';if(window.Voice){Voice.speak(greeting);setTimeout(()=>Voice.start(handleVoice,()=>{}),700)}else{modal(`<h2>${greeting}</h2><p>Скажи, что у тебя есть, или используй камеру.</p><button class="primary full" id="simulateScan">Показать закрома</button>`);}}
+function handleVoice(text){const t=normalize(text);if(t.includes('посмотри')||t.includes('покажи')||t.includes('закром')||t.includes('что у меня есть')){toast('Смотрю, что у тебя есть…');setTimeout(simulateScan,500);return}if(t.includes('добав')||t.includes('есть ')){const found=['яйц','помидор','сыр','куриц','сливк','картоф','лук','гриб','хлеб','яблок'];const hit=found.find(x=>t.includes(x));if(hit){const map={яйц:['Яйца','🥚'],помидор:['Помидоры','🍅'],сыр:['Сыр','🧀'],куриц:['Курица','🍗'],сливк:['Сливки','🥛'],картоф:['Картофель','🥔'],лук:['Лук','🧅'],гриб:['Шампиньоны','🍄'],хлеб:['Хлеб','🍞'],яблок:['Яблоки','🍎']};addProduct(...map[hit]);toast('Добавил: '+map[hit][0]);showScreen('inventory');return}}toast('Я услышал: «'+text+'». Уточни, что сделать.')}
+$('#closeModal').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};
+$$('.tab').forEach(t=>t.onclick=()=>showScreen(t.dataset.screen));
+$('#lazyBtn').onclick=startLazy;
+$('#voiceTop').onclick=()=>{if(window.Voice?.supported)Voice.start(handleVoice);else toast('Голосовой ввод недоступен. Нажми «Начать ленивиться» или используй камеру.')};
+$('#scanBtn').onclick=()=>modal(`<h2>📷 Посмотри закрома</h2><p>В этой тестовой версии камера имитируется. Реальное компьютерное зрение подключим следующим этапом.</p><button class="primary full" id="simulateScan">Запустить тестовое распознавание</button>`);
+$('#addProduct').onclick=()=>modal(`<h2>Добавить продукт</h2><button class="choice" data-add="Яблоки|🍎">🍎 Яблоки</button><button class="choice" data-add="Морковь|🥕">🥕 Морковь</button><button class="choice" data-add="Хлеб|🍞">🍞 Хлеб</button><button class="choice" data-add="Лимон|🍋">🍋 Лимон</button>`);
 $('#aperitifBtn').onclick=()=>modal(`<h2>У меня есть аперитивчик 🥂</h2><p>Выбери, что сегодня есть.</p><button class="choice" data-drink="🥂 Шампанское">🥂 Шампанское</button><button class="choice" data-drink="🍷 Вино">🍷 Вино</button><button class="choice" data-drink="🍹 Другой напиток">🍹 Другой напиток</button>`);
-$('#modalContent').addEventListener('click',e=>{const b=e.target.closest('[data-drink]');if(!b)return;const drink=b.dataset.drink;modal(`<h2>${drink}</h2><p>Подбираю закуску из того, что уже есть дома.</p><div class="hint">Например: сыр, овощи и курица. Если чего-то не хватает — добавлю это в список покупок.</div><button class="primary full" id="closeChoice">Показать варианты</button>`);});
-$('#whereBuy').onclick=()=>toast('Поиск магазинов — следующий модуль тестовой версии');
-$('#voiceTop').onclick=()=>{if('webkitSpeechRecognition' in window||'SpeechRecognition' in window){toast('Голосовой режим готов к подключению');}else{toast('Голосовой ввод недоступен в этом браузере')}};
+$('#whereBuy').onclick=()=>findNearbyShops($('#shops'));
+$('#modalContent').addEventListener('click',e=>{if(e.target.id==='simulateScan'){closeModal();simulateScan();return}if(e.target.id==='recipeDone'){closeModal();return}const add=e.target.closest('[data-add]');if(add){const [name,icon]=add.dataset.add.split('|');addProduct(name,icon);closeModal();toast('Добавлено: '+name);return}const drink=e.target.closest('[data-drink]');if(drink){const d=drink.dataset.drink;modal(`<h2>${d}</h2><p>Вот что подходит к напитку из твоих продуктов.</p><div class="hint">Сыр, овощи и курица уже есть. Если захочешь, Лентяй добавит недостающие продукты в список покупок.</div><button class="primary full" id="closeChoice">Показать варианты</button>`)}});
+$('#modalContent').addEventListener('click',e=>{if(e.target.id==='closeChoice')closeModal()});
+(async()=>{const shared=await loadSharedLibrary();if(shared.length){recipes=shared.map(r=>({...r,ready:r.ingredients?.every(have)||false,need:r.ingredients||[]}));renderRecipes();}})();
 renderRecipes();renderInventory();renderShopping();
