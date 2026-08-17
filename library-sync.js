@@ -1,1 +1,3 @@
-async function loadSharedLibrary(){try{const r=await fetch('./library.json',{cache:'no-store'});if(!r.ok)throw new Error();return (await r.json()).recipes||[]}catch(e){return []}}
+const API_BASE=window.LENCHAY_API||'';
+async function loadSharedLibrary(){const urls=[API_BASE+'/api/library','./library.json'];for(const url of urls){try{const r=await fetch(url,{cache:'no-store'});if(r.ok){const j=await r.json();if(Array.isArray(j.recipes))return j.recipes}}catch{}}return []}
+async function publishRecipe(recipe){const url=API_BASE+'/api/library/recipes';try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(recipe)});if(!r.ok)throw new Error();return await r.json()}catch{return {ok:false,error:'Сетевой API пока не подключён. Для общей публикации нужен адрес Lenchay server.'}}}
